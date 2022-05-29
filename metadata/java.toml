@@ -1,2 +1,1 @@
-exts = ["java"]
 default_entrypoints = ["Main.java"]

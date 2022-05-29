@@ -3,10 +3,11 @@
 use clap::Parser;
 use futures_util::{AsyncWriteExt, StreamExt};
 use shiplift::{
+    builder::RmContainerOptionsBuilder,
     tty::{Multiplexer, TtyChunk},
     ContainerOptions, Docker,
 };
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Duration};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -83,12 +84,11 @@ async fn main() {
         .containers()
         .create(
             &ContainerOptions::builder(&format!("cheese-grader/runner-{}:latest", args.lang))
-                .auto_remove(true)
                 .attach_stdin(true)
                 .attach_stdout(true)
                 .attach_stderr(true)
                 .volumes(vec![format!(
-                    "{}:/usr/src/code",
+                    "{}:/usr/src/code:ro",
                     dir_path.to_string_lossy()
                 )
                 .as_str()])
@@ -98,34 +98,95 @@ async fn main() {
         .await
     {
         Ok(info) => {
+            println!("{}", &info.id);
             let container = docker.containers().get(&info.id);
-
-            let mut mux = container
-                .attach()
-                .await
-                .expect("Could not attach to Docker container");
 
             container
                 .start()
                 .await
                 .expect("Failed to start Docker container");
 
-            write_tty(&mut mux, b"Kot\n")
-                .await
-                .expect("Could not write to stdin");
+            let mut total_passed = 0;
+            let mut case_num = 0;
+            for case in &recipe.expects {
+                case_num += 1;
+                println!("===== RUNNING CASE {} =====", case_num);
+                let mut mux = container
+                    .attach()
+                    .await
+                    .expect("Could not attach to Docker container");
 
-            let mut stdout = Vec::new();
-
-            while let Some(Ok(chunk)) = mux.next().await {
-                print_chunk(&chunk);
-
-                if let TtyChunk::StdOut(bytes) = chunk {
-                    stdout
-                        .write_all(&bytes)
+                if let Some(input) = &case.input {
+                    write_tty(&mut mux, input.as_bytes())
                         .await
-                        .expect("Couldn't write to saved stdout");
+                        .expect("Could not write to stdin");
                 }
+
+                let mut stdout = Vec::new();
+                let mut stderr = Vec::new();
+
+                while let Some(Ok(chunk)) = mux.next().await {
+                    print_chunk(&chunk);
+
+                    match chunk {
+                        TtyChunk::StdOut(bytes) => {
+                            stdout
+                                .write_all(&bytes)
+                                .await
+                                .expect("Couldn't write to saved stdout");
+                        }
+                        TtyChunk::StdErr(bytes) => {
+                            stderr
+                                .write_all(&bytes)
+                                .await
+                                .expect("Couldn't write to saved stderr");
+                        }
+                        TtyChunk::StdIn(_) => unreachable!(),
+                    }
+                }
+
+                println!("\n===== RESULTS FOR CASE {} =====", case_num);
+
+                let mut pass = true;
+
+                if case.output.is_some() && stdout != case.output.as_ref().unwrap().as_bytes() {
+                    pass = false;
+                    println!("Expected output: {}", case.output.as_ref().unwrap());
+                    println!(
+                        "Actual output: {}",
+                        std::str::from_utf8(stdout.as_slice()).unwrap()
+                    );
+                }
+
+                if case.err.is_some() && stderr != case.err.as_ref().unwrap().as_bytes() {
+                    pass = false;
+                    println!("Expected stderr: {}", case.err.as_ref().unwrap());
+                    println!(
+                        "Actual stderr: {}",
+                        std::str::from_utf8(stderr.as_slice()).unwrap()
+                    );
+                }
+
+                if pass {
+                    total_passed += 1;
+                    println!("PASS");
+                } else {
+                    println!("FAIL");
+                }
+
+                container
+                    .restart(Some(Duration::from_secs(10)))
+                    .await
+                    .expect("Failed to stop Docker container");
             }
+
+            container
+                .remove(RmContainerOptionsBuilder::default().force(true).build())
+                .await
+                .expect("Failed to remove Docker container");
+
+            println!("\n===== SUMMARY =====");
+            println!("{}/{} cases passed", total_passed, recipe.expects.len());
         }
         Err(e) => eprintln!("Error creating container: {}", e),
     }

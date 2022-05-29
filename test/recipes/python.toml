@@ -1,9 +1,0 @@
-[[expects]]
-err = "Enter your name: "
-input = "Kot"
-output = "Hello, Kot!"
-
-[[expects]]
-err = "Enter your name: "
-input = "a"
-output = "Hello, a!"

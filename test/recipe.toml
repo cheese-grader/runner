@@ -1,0 +1,4 @@
+[[expects]]
+err = "Enter your name: "
+input = "Kot\n"
+output = "Hello, Kot!\n"
