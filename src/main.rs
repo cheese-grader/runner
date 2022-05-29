@@ -17,7 +17,7 @@ struct Args {
 }
 
 #[recorder::record]
-struct Recipe {
+struct LangMetadata {
     default_entrypoints: Vec<String>,
 }
 
@@ -26,13 +26,13 @@ async fn main() {
     let mut args = Args::parse();
     let docker = Docker::new();
 
-    let recipe: Recipe = toml::from_str(
-        tokio::fs::read_to_string(format!("./recipes/{}.toml", args.lang))
+    let meta: LangMetadata = toml::from_str(
+        tokio::fs::read_to_string(format!("./metadata/{}.toml", args.lang))
             .await
             .unwrap()
             .as_str(),
     )
-    .expect("Could not parse recipe");
+    .expect("Could not parse metadata");
 
     let dir_path = args
         .directory
@@ -45,7 +45,7 @@ async fn main() {
         .expect("You need to specify an existing folder path");
 
     if args.entrypoint.is_none() {
-        for entrypoint in recipe.default_entrypoints {
+        for entrypoint in meta.default_entrypoints {
             let entrypoint_path = dir_path.join(&entrypoint);
             if entrypoint_path.exists() {
                 args.entrypoint = Some(entrypoint);
