@@ -9,3 +9,6 @@ futures-util = "0.3"
 shiplift = "0.7"
 ansi_term = "0.12"
 clap = { version = "3.1", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.5"
+recorder = { version = "0.1.1", features = ["serde"] }

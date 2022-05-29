@@ -731,6 +731,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "recorder"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1aa9253f460a5ccb6302023fa558ee75a692a27ad0d0953fa2149251a5321ee6"
+dependencies = [
+ "quote",
+ "serde",
+ "syn",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.2.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -746,8 +757,11 @@ dependencies = [
  "ansi_term",
  "clap",
  "futures-util",
+ "recorder",
+ "serde",
  "shiplift",
  "tokio",
+ "toml",
 ]
 
 [[package]]
@@ -961,6 +975,15 @@ dependencies = [
  "openssl",
  "openssl-sys",
  "tokio",
+]
+
+[[package]]
+name = "toml"
+version = "0.5.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d82e1a7758622a465f8cee077614c73484dac5b836c02ff6a40d5d1010324d7"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

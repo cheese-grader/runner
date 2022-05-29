@@ -11,15 +11,28 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    image: String,
+    lang: String,
     directory: PathBuf,
-    entrypoint: String,
+    entrypoint: Option<String>,
+}
+
+#[recorder::record]
+struct Recipe {
+    default_entrypoints: Vec<String>,
 }
 
 #[tokio::main]
 async fn main() {
-    let args = Args::parse();
+    let mut args = Args::parse();
     let docker = Docker::new();
+
+    let recipe: Recipe = toml::from_str(
+        tokio::fs::read_to_string(format!("./recipes/{}.toml", args.lang))
+            .await
+            .unwrap()
+            .as_str(),
+    )
+    .expect("Could not parse recipe");
 
     let dir_path = args
         .directory
@@ -31,10 +44,24 @@ async fn main() {
         .try_exists()
         .expect("You need to specify an existing folder path");
 
+    if args.entrypoint.is_none() {
+        for entrypoint in recipe.default_entrypoints {
+            let entrypoint_path = dir_path.join(&entrypoint);
+            if entrypoint_path.exists() {
+                args.entrypoint = Some(entrypoint);
+                break;
+            }
+        }
+    }
+
+    args.entrypoint
+        .as_ref()
+        .expect("You need to specify an entrypoint, since none matched the default");
+
     match docker
         .containers()
         .create(
-            &ContainerOptions::builder(args.image.as_ref())
+            &ContainerOptions::builder(&format!("cheese-grader/runner-{}:latest", args.lang))
                 .auto_remove(true)
                 .attach_stdin(true)
                 .attach_stdout(true)
@@ -44,7 +71,7 @@ async fn main() {
                     dir_path.to_string_lossy()
                 )
                 .as_str()])
-                .env(vec![format!("ENTRYPOINT={}", args.entrypoint)])
+                .env(vec![format!("ENTRYPOINT={}", args.entrypoint.unwrap())])
                 .build(),
         )
         .await

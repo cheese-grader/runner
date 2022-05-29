@@ -12,6 +12,7 @@ just build python,java
 
 Run some code
 ```sh
-# Usage: ./runner IMAGE DIRECTORY ENTRYPOINT
-cargo run cheese-grader/runner-java:latest test/java Main.java
+# Usage: ./runner LANG DIRECTORY [ENTRYPOINT]
+cargo run java ./test/java
+cargo run python ./test/python
 ```
