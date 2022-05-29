@@ -1,0 +1,8 @@
+[[expects]]
+input = """2 2 1 2 3 4\n2 2 1 2 3 4\n"""
+output = """   7  10\n  15  22\n"""
+
+# [checker]
+# lang = "java"
+# dir = "./solution/"
+# entrypoint = "Main.java"

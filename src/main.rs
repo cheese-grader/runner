@@ -111,6 +111,7 @@ async fn main() {
             for case in &recipe.expects {
                 case_num += 1;
                 println!("===== RUNNING CASE {} =====", case_num);
+
                 let mut mux = container
                     .attach()
                     .await
