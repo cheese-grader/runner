@@ -3,7 +3,7 @@ default:
 
 build-all:
     #!/bin/sh
-    for lang in ./docker/* ; do
+    for lang in ./docker/src/* ; do
         just build $(basename $lang)
 
         if [ $? -ne 0 ]
@@ -16,7 +16,7 @@ build LANGS:
     IFS="," read -ra langs <<< "{{ LANGS }}"
     for lang in ${langs[@]} ; do
         echo "Building $lang..."
-        docker build -t cheese-grader/runner-$lang ./docker/$lang
+        docker build -t cheese-grader/runner-$lang ./docker/src/$lang
 
         if [ $? -ne 0 ]
             then break
@@ -27,7 +27,7 @@ build LANGS:
 
 test-all:
     #!/bin/sh
-    for lang in ./docker/* ; do
+    for lang in ./docker/src/* ; do
         just build $(basename $lang)
         just test $(basename $lang)
 

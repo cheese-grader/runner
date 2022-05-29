@@ -12,6 +12,7 @@ use std::path::PathBuf;
 #[clap(author, version, about, long_about = None)]
 struct Args {
     lang: String,
+    recipe: PathBuf,
     directory: PathBuf,
     entrypoint: Option<String>,
 }
@@ -21,15 +22,35 @@ struct LangMetadata {
     default_entrypoints: Vec<String>,
 }
 
+#[recorder::record]
+struct Recipe {
+    expects: Vec<Expects>,
+}
+
+#[recorder::record]
+struct Expects {
+    err: Option<String>,
+    input: Option<String>,
+    output: Option<String>,
+}
+
 #[tokio::main]
 async fn main() {
     let mut args = Args::parse();
     let docker = Docker::new();
 
+    let recipe: Recipe = toml::from_str(
+        tokio::fs::read_to_string(&args.recipe)
+            .await
+            .expect("Failed to read recipe")
+            .as_str(),
+    )
+    .expect("Could not parse recipe");
+
     let meta: LangMetadata = toml::from_str(
         tokio::fs::read_to_string(format!("./metadata/{}.toml", args.lang))
             .await
-            .unwrap()
+            .expect("Failed to read language metadata")
             .as_str(),
     )
     .expect("Could not parse metadata");

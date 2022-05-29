@@ -1,1 +1,2 @@
+exts = ["py"]
 default_entrypoints = ["start.py", "main.py", "index.py"]
