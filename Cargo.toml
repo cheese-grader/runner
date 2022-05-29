@@ -1,0 +1,11 @@
+[package]
+name = "runner"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.18", features = ["full"] }
+futures-util = "0.3"
+shiplift = "0.7"
+ansi_term = "0.12"
+clap = { version = "3.1", features = ["derive"] }
