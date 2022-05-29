@@ -24,6 +24,3 @@ build LANGS:
     done
 
     echo "Built ${#langs[@]} languages"
-    
-    echo "Building executable..."
-    cargo build --release
