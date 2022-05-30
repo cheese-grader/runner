@@ -106,7 +106,7 @@ async fn main() {
                 .await
                 .expect("Failed to start Docker container");
 
-            let mut total_passed = 0;
+            let mut total_cases_passed = 0;
             let mut case_num = 0;
             for case in &recipe.expects {
                 case_num += 1;
@@ -169,11 +169,13 @@ async fn main() {
                 }
 
                 if pass {
-                    total_passed += 1;
+                    total_cases_passed += 1;
                     println!("PASS");
                 } else {
                     println!("FAIL");
                 }
+
+                // TODO - reset code directory
 
                 container
                     .restart(Some(Duration::from_secs(10)))
@@ -187,7 +189,11 @@ async fn main() {
                 .expect("Failed to remove Docker container");
 
             println!("\n===== SUMMARY =====");
-            println!("{}/{} cases passed", total_passed, recipe.expects.len());
+            println!(
+                "{}/{} cases passed",
+                total_cases_passed,
+                recipe.expects.len()
+            );
         }
         Err(e) => eprintln!("Error creating container: {}", e),
     }

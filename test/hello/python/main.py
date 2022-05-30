@@ -1,4 +1,4 @@
 import sys
 
-print("Enter your name: ", file=sys.stderr, end="")
+print("Enter your name: ", end="")
 print("Hello, " + input() + "!")
