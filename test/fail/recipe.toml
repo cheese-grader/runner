@@ -1,0 +1,11 @@
+[[expects]]
+input = "Case 1"
+output = """Hi Case 1"""
+
+[[expects]]
+input = "Case 2"
+output = """Hi Case 2"""
+
+[[expects]]
+input = "Case 3"
+output = """Hi Case 3"""
